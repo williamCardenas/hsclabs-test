@@ -1,0 +1,11 @@
+{
+    "name": "william/hsclabs",
+    "description": "teste aplicado para proccesso seletivo na HSCLabs",
+    "authors": [
+        {
+            "name": "William Caetano Cardenas",
+            "email": "william.caetano.cardenas@gmail.com"
+        }
+    ],
+    "require": {}
+}
