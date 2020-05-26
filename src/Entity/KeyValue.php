@@ -16,6 +16,7 @@ Class KeyValue
     private $cursorPosition = null;
     private $expireType = null;
     private $timestampToExpire = null;
+    private $deleted = 0;
 
     private $storage;
 
@@ -33,6 +34,7 @@ Class KeyValue
             $this->key = $key;
         }
         $this->value = $value;
+        $this->deleted = 0;
 
         if(!empty($expireTime) && !empty($expireType)){
             $this->expireType = $expireType;
@@ -51,7 +53,7 @@ Class KeyValue
 
     public function getValueString()
     {
-        return $this->key."|".$this->value."|".$this->expireType."|".$this->timestampToExpire;
+            return $this->key."|".$this->value."|".$this->expireType."|".$this->timestampToExpire."|".$this->deleted;
     }
 
     private function loadFromString(String $value):void
@@ -66,25 +68,41 @@ Class KeyValue
         $this->timestampToExpire = array_key_exists(3,$value)?$value[3]:null;
     }
 
-    public function get($key)
+    public function get(String $key)
     {
         $value = $this->storage->search($key);
         if($value){
-            $timestampToExpire = intval($this->timestampToExpire);
-
-            if(!empty($timestampToExpire)){
-                $this->loadFromString($value);
-                $date = new DateTime('Now');
+            $this->loadFromString($value);
+            if($this->deleted == 0){
+                $timestampToExpire = intval($this->timestampToExpire);
     
-                $dateExpire = new DateTime("@$timestampToExpire");
-    
-                if($date > $dateExpire){
-                    return "(nil)";
+                if(!empty($timestampToExpire)){
+                    $date = new DateTime('Now');
+        
+                    $dateExpire = new DateTime("@$timestampToExpire");
+        
+                    if($date > $dateExpire){
+                        return "(nil)";
+                    }
                 }
+                return $this->value;
             }
-            return $this->value;
         }
         return "(nil)";
+    }
+
+    public function del(String $key):String
+    {
+        $value = $this->storage->search($key);
+        if(!empty($value)){
+            $this->loadFromString($value);
+            $this->deleted = 1;
+            $this->storage->save($this->getValueString(),$this->cursorPosition);
+
+            return "(integer) 1";
+        }else{
+            return "(integer) 0";
+        }
     }
     
 }

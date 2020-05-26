@@ -54,5 +54,28 @@ final class KeyValueTest extends TestCase
         $return = $value->get('PHPUnitExpire');
         $this->assertEquals("(nil)", $return);
     }
+
+    public function testeDeleteKeyValue(): void
+    {
+        $value = new Entity\KeyValue();
+        $return = $value->set('PHPUnitExpire',"value to dell",'EX', 100);
+
+        $this->assertTrue($return);
+        
+        $return = $value->get('PHPUnitExpire');
+        $this->assertEquals("value to dell", $return);
+
+        $return = $value->del('PHPUnitExpire');
+        $this->assertEquals("(integer) 1", $return);
+        
+        $return = $value->get('PHPUnitExpire');
+        $this->assertEquals("(nil)", $return);
+
+        $return = $value->del('PHPUnitKey');
+        $this->assertEquals("(integer) 1", $return);
+
+        $return = $value->del('PHPUnitKeyInexist');
+        $this->assertEquals("(integer) 0", $return);
+    }
     
 }
