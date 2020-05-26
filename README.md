@@ -1,5 +1,5 @@
 # hsclabs-test
-Teste para vage de desenvolvedor na hsc labs
+Teste para vaga de desenvolvedor na hsclabs
 
 Engineering Redis Challenge
 
