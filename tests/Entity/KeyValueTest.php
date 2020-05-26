@@ -14,6 +14,14 @@ final class KeyValueTest extends TestCase
         );
     }
 
+    public function testeGetInexistentKey(): void
+    {
+        $value = new Entity\KeyValue();
+        
+        $return = $value->get('PHPUnitKeyUnexist');
+        $this->assertEquals("(nil)", $return);
+    }
+
     public function testeCreateNewKeyValue(): void
     {
         $value = new Entity\KeyValue();
@@ -36,5 +44,15 @@ final class KeyValueTest extends TestCase
         $this->assertEquals("value42", $return);
     }
 
+    public function testeCreateNewKeyValueWithExpire(): void
+    {
+        $value = new Entity\KeyValue();
+        $return = $value->set('PHPUnitExpire',"new-value",'EX',2);
+
+        $this->assertTrue($return);
+        sleep(8);
+        $return = $value->get('PHPUnitExpire');
+        $this->assertEquals("(nil)", $return);
+    }
     
 }
