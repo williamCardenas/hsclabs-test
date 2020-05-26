@@ -60,4 +60,28 @@ class Storage
         }
         return null;
     }
+
+    public function deleteBase():void
+    {
+        unlink(self::PATH . DIRECTORY_SEPARATOR . self::FILE_NAME);
+    }
+
+    public function getDbSize():Int
+    {
+        if(file_exists(self::PATH . DIRECTORY_SEPARATOR . self::FILE_NAME)){
+            $file = fopen(self::PATH . DIRECTORY_SEPARATOR . self::FILE_NAME, "r");
+    
+            $lineCount = 0;
+            while (($buffer = fgets($file)) !== false) {
+                $value = new KeyValue($buffer."|".$lineCount);
+                var_dump($value);
+                if($value->isDeleted() == 0){
+                    $lineCount++;
+                }
+            }
+            fclose($file);
+            return $lineCount;
+        }
+        return 0;
+    }
 }

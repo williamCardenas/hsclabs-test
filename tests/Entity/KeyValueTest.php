@@ -67,7 +67,7 @@ final class KeyValueTest extends TestCase
 
         $return = $value->del('PHPUnitExpire');
         $this->assertEquals("(integer) 1", $return);
-        
+
         $return = $value->get('PHPUnitExpire');
         $this->assertEquals("(nil)", $return);
 
@@ -76,6 +76,34 @@ final class KeyValueTest extends TestCase
 
         $return = $value->del('PHPUnitKeyInexist');
         $this->assertEquals("(integer) 0", $return);
+    }
+
+    public function testeKeysCount():void
+    {
+        $storage = new Entity\Storage();
+        $storage->deleteBase();
+
+        $size = $storage->getDbSize();
+        $this->assertEquals(0, $size);
+        
+        $value = new Entity\KeyValue();
+        $return = $value->set('PHPUnitExpire',"value to dell",'EX', 100);
+        $this->assertTrue($return);
+
+        $size = $storage->getDbSize();
+        $this->assertEquals(1, $size);
+
+        $return = $value->set('PHPUnitOuther',"outher");
+        $this->assertTrue($return);
+
+        $size = $storage->getDbSize();
+        $this->assertEquals(2, $size);
+
+        $return = $value->del('PHPUnitOuther');
+        $this->assertEquals("(integer) 1", $return);
+
+        $size = $storage->getDbSize();
+        $this->assertEquals(1, $size);
     }
     
 }

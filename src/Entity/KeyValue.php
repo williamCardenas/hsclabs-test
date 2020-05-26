@@ -6,7 +6,7 @@ use DateTime;
 use DateInterval;
 use phpDocumentor\Reflection\Types\Integer;
 
-Class KeyValue
+class KeyValue
 {
     const SECUND_TYPE = "EX";
     const MILESECUND_TYPE = "PX";
@@ -20,43 +20,47 @@ Class KeyValue
 
     private $storage;
 
-    public function __construct()
+    public function __construct(String $value = null)
     {
         $this->storage = new Storage();
+
+        if (!empty($value)) {
+            $this->loadFromString($value);
+        }
     }
 
     public function set($key, $value, $expireType = null, $expireTime = null)
     {
         $oldValue = $this->storage->search($key);
-        if(!empty($oldValue)){
+        if (!empty($oldValue)) {
             $this->loadFromString($oldValue);
-        }else{
+        } else {
             $this->key = $key;
         }
         $this->value = $value;
         $this->deleted = 0;
 
-        if(!empty($expireTime) && !empty($expireType)){
+        if (!empty($expireTime) && !empty($expireType)) {
             $this->expireType = $expireType;
             $date = new DateTime("Now");
 
-            if($this->expireType == self::MILESECUND_TYPE){
-                $this->timestampToExpire = $date->getTimestamp()*1000;
-            }else{
-                $date->add(new DateInterval('PT'.$expireTime.'S'));
+            if ($this->expireType == self::MILESECUND_TYPE) {
+                $this->timestampToExpire = $date->getTimestamp() * 1000;
+            } else {
+                $date->add(new DateInterval('PT' . $expireTime . 'S'));
                 $this->timestampToExpire = $date->getTimestamp();
             }
         }
-        
-        return $this->storage->save($this->getValueString(),$this->cursorPosition);
+
+        return $this->storage->save($this->getValueString(), $this->cursorPosition);
     }
 
     public function getValueString()
     {
-            return $this->key."|".$this->value."|".$this->expireType."|".$this->timestampToExpire."|".$this->deleted;
+        return $this->key . "|" . $this->value . "|" . $this->expireType . "|" . $this->timestampToExpire . "|" . $this->deleted;
     }
 
-    private function loadFromString(String $value):void
+    private function loadFromString(String $value): void
     {
         $value = explode("|", $value);
 
@@ -64,26 +68,20 @@ Class KeyValue
         $this->value = $value[1];
         $this->cursorPosition = intval(array_pop($value));
 
-        $this->expireType = array_key_exists(2,$value)?$value[2]:null;
-        $this->timestampToExpire = array_key_exists(3,$value)?$value[3]:null;
+        $this->expireType = array_key_exists(2, $value) ? $value[2] : null;
+        $this->timestampToExpire = array_key_exists(3, $value) ? $value[3] : null;
+
+        $this->deleted = array_key_exists(4, $value) ? $value[4] : 0;
     }
 
     public function get(String $key)
     {
         $value = $this->storage->search($key);
-        if($value){
+        if ($value) {
             $this->loadFromString($value);
-            if($this->deleted == 0){
-                $timestampToExpire = intval($this->timestampToExpire);
-    
-                if(!empty($timestampToExpire)){
-                    $date = new DateTime('Now');
-        
-                    $dateExpire = new DateTime("@$timestampToExpire");
-        
-                    if($date > $dateExpire){
-                        return "(nil)";
-                    }
+            if ($this->deleted == 0) {
+                if ($this->isExpireted()) {
+                    return "(nil)";
                 }
                 return $this->value;
             }
@@ -91,18 +89,38 @@ Class KeyValue
         return "(nil)";
     }
 
-    public function del(String $key):String
+    public function isExpireted()
+    {
+        $timestampToExpire = intval($this->timestampToExpire);
+
+        if (!empty($timestampToExpire)) {
+            $now = new DateTime('Now');
+
+            $dateExpire = new DateTime("@$timestampToExpire");
+
+            if ($now > $dateExpire) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isDeleted()
+    {
+        return $this->deleted;
+    }
+
+    public function del(String $key): String
     {
         $value = $this->storage->search($key);
-        if(!empty($value)){
+        if (!empty($value)) {
             $this->loadFromString($value);
             $this->deleted = 1;
-            $this->storage->save($this->getValueString(),$this->cursorPosition);
+            $this->storage->save($this->getValueString(), $this->cursorPosition);
 
             return "(integer) 1";
-        }else{
+        } else {
             return "(integer) 0";
         }
     }
-    
 }
